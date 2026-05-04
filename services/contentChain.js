@@ -15,9 +15,8 @@ async function processInChunks(items, fn, chunkSize = CONCURRENCY) {
 }
 
 export async function generateContentChain(input) {
-  // Step 1: Generate the content plan using the more capable model
   const plannerPrompt = buildPlannerPrompt(input);
-  const plannerRaw = await callClaude(plannerPrompt, "claude-opus-4-7");
+  const plannerRaw = await callClaude(plannerPrompt, "gemini-2.5-pro");
 
   let plannerData;
   try {
@@ -27,14 +26,11 @@ export async function generateContentChain(input) {
   }
 
   const plan = plannerData.plan || [];
-  if (plan.length === 0) {
-    throw new Error("Content plan is empty.");
-  }
+  if (plan.length === 0) throw new Error("Content plan is empty.");
 
-  // Step 2: Generate individual posts for each plan item in parallel chunks
   const posts = await processInChunks(plan, async (item) => {
     const postPrompt = buildPostPrompt(input, item, input.mode);
-    const postRaw = await callClaude(postPrompt, "claude-sonnet-4-6");
+    const postRaw = await callClaude(postPrompt, "gemini-2.5-pro");
 
     let content;
     try {
