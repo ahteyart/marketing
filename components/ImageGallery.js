@@ -2,19 +2,24 @@
 
 import { useState } from "react";
 
-export default function ImageGallery({ content, product, type }) {
+export default function ImageGallery({ product, type, angle, summary }) {
   const [images, setImages] = useState([]);
 
   const buildPrompt = () => {
     const style =
       type === "carousel" ? "carousel visual" : "social media advertisement";
-    return `Professional ${style} for ${product}. Clean modern design, vibrant colors, high quality commercial photography, minimalist layout. No text, no words, no letters, no typography, no writing, no characters, no captions.`;
+    const context = [angle, summary].filter(Boolean).join(". ");
+    return `Professional ${style} photo for ${product}. ${context}. Lifestyle photography, clean modern aesthetic, high quality commercial photography, vibrant natural lighting.`;
   };
+
+  const negative =
+    "text, words, letters, typography, watermark, writing, captions, titles, labels, signs, fonts, alphabet, numbers, logo, brand name";
 
   const handleGenerate = () => {
     const prompt = encodeURIComponent(buildPrompt());
+    const neg = encodeURIComponent(negative);
     const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${prompt}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}`;
+    const url = `https://image.pollinations.ai/prompt/${prompt}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}&negative=${neg}`;
     setImages((prev) => [{ url, seed, loaded: false, error: false }, ...prev]);
   };
 
@@ -53,9 +58,7 @@ export default function ImageGallery({ content, product, type }) {
 
             {img.error && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-xs text-red-500 text-center px-4">
-                  Failed to load. Try again.
-                </p>
+                <p className="text-xs text-red-500 text-center px-4">Failed to load. Try again.</p>
               </div>
             )}
 

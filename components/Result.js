@@ -126,9 +126,10 @@ export default function Result({ data }) {
 
       {showImages && (
         <ImageGallery
-          content={content}
           product={data.planner?.product || ""}
           type={isCarousel ? "carousel" : "ad"}
+          angle={post.angle || ""}
+          summary={post.summary || ""}
         />
       )}
     </div>
