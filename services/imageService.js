@@ -2,14 +2,15 @@ export async function generateImage(prompt) {
   const negativePrompt =
     "text, words, letters, typography, watermark, writing, captions, titles, labels, signs, fonts, alphabet, numbers, logo, ugly, deformed, blurry, low quality, bad anatomy";
 
-  // ✅ New correct URL format for Hugging Face Inference API
+  // ✅ Updated to new Hugging Face Inference API format
   const response = await fetch(
-    "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2",
+    "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
     {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.HF_TOKEN}`,
         "Content-Type": "application/json",
+        "x-wait-for-model": "true",
       },
       body: JSON.stringify({
         inputs: prompt,
