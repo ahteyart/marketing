@@ -1,36 +1,27 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+
 export async function generateImage(prompt, type = "ad") {
-  const apiKey = process.env.GOOGLE_API_KEY;
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash-exp-image-generation",
+  });
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        instances: [{ prompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: "1:1",
-        },
-      }),
-    }
-  );
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: { responseModalities: ["image"] },
+  });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || `Image generation failed: ${response.status}`);
-  }
+  const parts = result.response.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts.find((p) => p.inlineData);
 
-  const data = await response.json();
-  const prediction = data.predictions?.[0];
-
-  if (!prediction?.bytesBase64Encoded) {
-    throw new Error("No image returned from Imagen API.");
+  if (!imagePart?.inlineData) {
+    throw new Error("No image returned. Please try again.");
   }
 
   return {
-    base64: prediction.bytesBase64Encoded,
-    mimeType: prediction.mimeType || "image/png",
+    base64: imagePart.inlineData.data,
+    mimeType: imagePart.inlineData.mimeType || "image/png",
     type,
   };
 }
