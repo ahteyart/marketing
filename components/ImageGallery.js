@@ -4,80 +4,79 @@ import { useState } from "react";
 
 export default function ImageGallery({ product, type, angle, summary }) {
   const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const buildPrompt = () => {
     const style =
       type === "carousel" ? "carousel visual" : "social media advertisement";
     const context = [angle, summary].filter(Boolean).join(". ");
-    return `Professional ${style} photo for ${product}. ${context}. Lifestyle photography, clean modern aesthetic, high quality commercial photography, vibrant natural lighting.`;
+    return `Professional ${style} photo for ${product}. ${context}. Lifestyle photography, clean modern aesthetic, high quality commercial photography, vibrant natural lighting, no text, no words, no letters.`;
   };
 
-  const negative =
-    "text, words, letters, typography, watermark, writing, captions, titles, labels, signs, fonts, alphabet, numbers, logo, brand name";
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError("");
 
-  const handleGenerate = () => {
-    const prompt = encodeURIComponent(buildPrompt());
-    const neg = encodeURIComponent(negative);
-    const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${prompt}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}&negative=${neg}`;
-    setImages((prev) => [{ url, seed, loaded: false, error: false }, ...prev]);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: buildPrompt() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to generate image.");
+      } else {
+        setImages((prev) => [data, ...prev]);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const updateImage = (seed, updates) =>
-    setImages((prev) =>
-      prev.map((img) => (img.seed === seed ? { ...img, ...updates } : img))
-    );
 
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-gray-900">AI-Generated Images</h3>
-        <button onClick={handleGenerate} className="btn-primary text-sm">
-          Generate Image
+        <button onClick={handleGenerate} disabled={loading} className="btn-primary text-sm">
+          {loading ? "Generating..." : "Generate Image"}
         </button>
       </div>
 
-      {images.length === 0 && (
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3 mb-4">
+          {error}
+        </div>
+      )}
+
+      {images.length === 0 && !loading && (
         <p className="text-sm text-gray-400 text-center py-8">
           Click &quot;Generate Image&quot; to create a visual for this post
         </p>
       )}
 
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          <p className="text-sm text-gray-400">Generating with FLUX...</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
-        {images.map((img, i) => (
-          <div
-            key={img.seed}
-            className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group"
-          >
-            {!img.loaded && !img.error && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                <p className="text-xs text-gray-400">Generating...</p>
-              </div>
-            )}
-
-            {img.error && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-xs text-red-500 text-center px-4">Failed to load. Try again.</p>
-              </div>
-            )}
-
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={img.url}
-              alt={`Generated ${i + 1}`}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${
-                img.loaded ? "opacity-100" : "opacity-0"
-              }`}
-              onLoad={() => updateImage(img.seed, { loaded: true })}
-              onError={() => updateImage(img.seed, { error: true })}
-            />
-
-            {img.loaded && (
+        {images.map((img, i) => {
+          const src = `data:${img.mimeType};base64,${img.base64}`;
+          return (
+            <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" />
               <a
-                href={img.url}
-                target="_blank"
-                rel="noreferrer"
+                href={src}
+                download={`contentai-image-${i + 1}.jpg`}
                 onClick={(e) => e.stopPropagation()}
                 className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-end justify-end p-3 opacity-0 group-hover:opacity-100"
               >
@@ -85,9 +84,9 @@ export default function ImageGallery({ product, type, angle, summary }) {
                   Download
                 </span>
               </a>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
