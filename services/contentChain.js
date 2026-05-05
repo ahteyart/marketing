@@ -15,8 +15,17 @@ async function processInChunks(items, fn, chunkSize = CONCURRENCY) {
 }
 
 export async function generateContentChain(input) {
-  const plannerRaw = await callClaude(plannerPrompt, "claude-sonnet-4-20250514");
-  const postRaw = await callClaude(postPrompt, "claude-sonnet-4-20250514");
+  // ✅ Safe defaults so nothing is undefined
+  const safeInput = {
+    ...input,
+    painPoints: input.painPoints || "Not specified",
+    features: input.features || "Not specified",
+    promotion: input.promotion || "Not specified",
+    goal: input.goal || "Not specified",
+  };
+
+  const plannerPrompt = buildPlannerPrompt(safeInput);
+  const plannerRaw = await callClaude(plannerPrompt, "gemini-2.5-pro");
 
   let plannerData;
   try {
@@ -29,7 +38,7 @@ export async function generateContentChain(input) {
   if (plan.length === 0) throw new Error("Content plan is empty.");
 
   const posts = await processInChunks(plan, async (item) => {
-    const postPrompt = buildPostPrompt(input, item, input.mode);
+    const postPrompt = buildPostPrompt(safeInput, item, safeInput.mode);
     const postRaw = await callClaude(postPrompt, "gemini-2.5-pro");
 
     let content;
