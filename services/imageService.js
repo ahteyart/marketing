@@ -1,6 +1,9 @@
 export async function generateImage(prompt) {
+  const negativePrompt =
+    "text, words, letters, typography, watermark, writing, captions, titles, labels, signs, fonts, alphabet, numbers, logo, ugly, deformed, blurry, low quality, bad anatomy";
+
   const response = await fetch(
-    "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
     {
       method: "POST",
       headers: {
@@ -11,8 +14,9 @@ export async function generateImage(prompt) {
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          num_inference_steps: 4,
-          guidance_scale: 0,
+          negative_prompt: negativePrompt,
+          num_inference_steps: 30,
+          guidance_scale: 7.5,
           width: 1024,
           height: 1024,
         },

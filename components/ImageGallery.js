@@ -8,10 +8,8 @@ export default function ImageGallery({ product, type, angle, summary }) {
   const [error, setError] = useState("");
 
   const buildPrompt = () => {
-    const style =
-      type === "carousel" ? "carousel visual" : "social media advertisement";
-    const context = [angle, summary].filter(Boolean).join(". ");
-    return `Professional ${style} photo for ${product}. ${context}. Lifestyle photography, clean modern aesthetic, high quality commercial photography, vibrant natural lighting, no text, no words, no letters.`;
+    const context = [angle, summary].filter(Boolean).join(", ");
+    return `Professional lifestyle photography, ${context}, ${product}, clean modern aesthetic, soft natural lighting, high quality commercial photography, 4k, photorealistic`;
   };
 
   const handleGenerate = async () => {
