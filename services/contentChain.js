@@ -15,8 +15,8 @@ async function processInChunks(items, fn, chunkSize = CONCURRENCY) {
 }
 
 export async function generateContentChain(input) {
-  const plannerPrompt = buildPlannerPrompt(input);
-  const plannerRaw = await callClaude(plannerPrompt, "gemini-2.5-pro");
+  const plannerRaw = await callClaude(plannerPrompt, "claude-sonnet-4-20250514");
+  const postRaw = await callClaude(postPrompt, "claude-sonnet-4-20250514");
 
   let plannerData;
   try {
