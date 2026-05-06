@@ -4,8 +4,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "ContentAI – AI Social Media Content Generator",
-  description: "Generate multilingual social media content in English, Malay, and Chinese.",
+  title: "Agensi Perkerjaan Global Link Sdn Bhd – Labour Solutions Malaysia",
+  description: "Licensed employment agency providing reliable labour and manpower solutions across Malaysia. Factory, construction, plantation, hospitality and more.",
 };
 
 export default function RootLayout({ children }) {
